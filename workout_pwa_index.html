@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hybrid Workout Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:;">
+  <meta name="theme-color" content="#020617">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #020617ee;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid #111827;
+      padding: 8px 10px 4px;
+    }
+    h1 { margin: 0; font-size: 17px; }
+    .header-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+    .week-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    select {
+      background: #020617;
+      color: #e5e7eb;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      padding: 3px 9px;
+      font-size: 13px;
+    }
+    .pill {
+      border-radius: 999px;
+      border: 1px solid #374151;
+      padding: 3px 9px;
+      font-size: 11px;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+    .btn {
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 3px 9px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .btn-small { font-size: 11px; padding: 2px 8px; }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #9ca3af;
+      padding: 3px 9px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #22c55e;
+      border-color: #16a34a;
+      color: #022c22;
+      font-weight: 600;
+    }
+    .muscle-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+      align-items: center;
+      font-size: 11px;
+    }
+    .muscle-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+    }
+    .muscle-chip input { width: 13px; height: 13px; }
+    .preset-label { font-size: 11px; color: #9ca3af; margin-left: 4px; }
+    .preset-btn {
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 2px 7px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .container {
+      padding: 10px 10px 14px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    details {
+      border-radius: 14px;
+      margin-bottom: 9px;
+      background: #020617;
+      border: 1px solid #111827;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+    }
+    summary {
+      list-style: none;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    summary::-webkit-details-marker { display: none; }
+    .badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #020617;
+      margin-left: 4px;
+    }
+    .day-complete {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #16a34a33;
+      border: 1px solid #16a34a;
+      color: #bbf7d0;
+      margin-left: 6px;
+      display: none;
+    }
+    .exercise {
+      padding: 8px 10px;
+      border-top: 1px solid #111827;
+      background: #020617;
+    }
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .exercise-header-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .exercise-name { font-size: 13px; font-weight: 600; }
+    .exercise-meta { font-size: 11px; color: #9ca3af; }
+    .muscle-tags { font-size: 10px; color: #6b7280; }
+    .use-toggle {
+      font-size: 10px;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+    }
+    .use-toggle input { width: 14px; height: 14px; }
+    .inputs-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .inputs-row label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11px;
+      color: #9ca3af;
+      flex: 1 1 28%;
+      min-width: 70px;
+    }
+    .inputs-row input {
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid #374151;
+      padding: 4px 6px;
+      color: #e5e7eb;
+      font-size: 12px;
+      min-width: 60px;
+    }
+    .exercise-actions {
+      margin-top: 5px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+    }
+    .exercise-done {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+    }
+    .exercise-done input { width: 14px; height: 14px; }
+    .exercise-actions input[type="text"] {
+      flex: 1 1 60%;
+      min-width: 110px;
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid #374151;
+      padding: 4px 6px;
+      color: #e5e7eb;
+      font-size: 12px;
+    }
+    .exercise-disabled .exercise-name {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+    .exercise-disabled .inputs-row,
+    .exercise-disabled .exercise-actions,
+    .exercise-disabled .superset-block { display: none; }
+    .superset-block {
+      margin-top: 6px;
+      padding: 6px 7px;
+      border-radius: 10px;
+      border: 1px dashed #374151;
+      background: #020617;
+    }
+    .superset-title {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .superset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+    .superset-row select,
+    .superset-row input {
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid #374151;
+      padding: 3px 6px;
+      color: #e5e7eb;
+      font-size: 12px;
+      min-width: 70px;
+      flex: 1 1 30%;
+    }
+    #dataView { display: none; }
+    .data-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .data-header h2 { margin: 0; font-size: 15px; }
+    .data-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 5px;
+    }
+    th, td {
+      border: 1px solid #111827;
+      padding: 4px 5px;
+      text-align: right;
+      background: #020617;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #020617;
+    }
+    td:first-child, th:first-child {
+      text-align: left;
+      white-space: nowrap;
+    }
+    .data-note {
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+    footer {
+      padding: 8px 10px 12px;
+      font-size: 10px;
+      color: #6b7280;
+      text-align: center;
+    }
+    @media (min-width: 768px) {
+      h1 { font-size: 18px; }
+      summary { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Hybrid Upper / Lower Workout Tracker</h1>
+  <div class="header-row">
+    <div class="week-controls">
+      <span>Week:</span>
+      <select id="weekSelect">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+      <span class="pill">Auto progressive overload based on last week</span>
+    </div>
+    <div>
+      <button class="btn btn-small" onclick="resetCurrentDay()">Reset open day</button>
+      <button class="btn btn-small" onclick="resetWeek()">Reset week</button>
+      <button class="btn btn-small" onclick="resetAll()">Reset all</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" id="tabWorkout" onclick="showView('workout')">Workout</button>
+    <button class="tab-btn" id="tabData" onclick="showView('data')">Data / Progress</button>
+  </div>
+  <div class="muscle-filters" id="muscleFilters">
+    <span>Filter:</span>
+    <label class="muscle-chip"><input type="checkbox" value="chest">Chest</label>
+    <label class="muscle-chip"><input type="checkbox" value="back">Back</label>
+    <label class="muscle-chip"><input type="checkbox" value="lats">Lats</label>
+    <label class="muscle-chip"><input type="checkbox" value="shoulders">Delts</label>
+    <label class="muscle-chip"><input type="checkbox" value="arms">Arms</label>
+    <label class="muscle-chip"><input type="checkbox" value="legs">Quads</label>
+    <label class="muscle-chip"><input type="checkbox" value="glutes">Glutes</label>
+    <label class="muscle-chip"><input type="checkbox" value="hams">Hams</label>
+    <label class="muscle-chip"><input type="checkbox" value="calves">Calves</label>
+    <label class="muscle-chip"><input type="checkbox" value="run">Run</label>
+    <label class="muscle-chip"><input type="checkbox" value="freestyle">Freestyle</label>
+    <button class="btn btn-small" onclick="clearMuscleFilters()">Clear</button>
+    <span class="preset-label">Presets:</span>
+    <button class="preset-btn" onclick="applyMusclePreset('upper')">Upper</button>
+    <button class="preset-btn" onclick="applyMusclePreset('lower')">Lower</button>
+    <button class="preset-btn" onclick="applyMusclePreset('push')">Push</button>
+    <button class="preset-btn" onclick="applyMusclePreset('pull')">Pull</button>
+  </div>
+</header>
+
+<div id="workoutView">
+  <div class="container" id="workoutContainer">
+    <p style="font-size:12px;color:#9ca3af;margin-top:8px;">
+      If you see only this text and no workout days, your browser is blocking scripts.
+      Make sure you open this file directly in Safari/Chrome (not just a preview).
+    </p>
+  </div>
+</div>
+
+<div id="dataView">
+  <div class="container">
+    <div class="data-header">
+      <h2>Progress Data</h2>
+      <div class="data-controls">
+        <span>Exercise:</span>
+        <select id="exerciseFilter">
+          <option value="all">All</option>
+        </select>
+        <span class="pill">Cells show max logged weight per week</span>
+      </div>
+    </div>
+    <div id="progressTableContainer"></div>
+    <div class="data-note">
+      Switch weeks at the top, log sets, then check this tab to see load trends over time.
+    </div>
+  </div>
+</div>
+
+<footer>
+  Data stays in your browser. When hosted on HTTPS, add to home screen for an app-like experience.
+</footer>
+
+<script>
+  const STORAGE_KEY = "hybrid_ul_tracker_pwa_v1";
+  const MAX_WEEKS = 8;
+
+  const MUSCLE_LABELS = {
+    chest: "Chest", back: "Back", lats: "Lats", shoulders: "Delts",
+    arms: "Arms", legs: "Quads", glutes: "Glutes", hams: "Hamstrings",
+    calves: "Calves", run: "Run", freestyle: "Freestyle"
+  };
+  const MUSCLE_ORDER = ["chest","back","lats","shoulders","arms","legs","glutes","hams","calves","run","freestyle"];
+
+  const PROGRAM = [
+    {
+      id: 1,
+      title: "Day 1 — Upper 1 (Bench + Row)",
+      badge: "Upper",
+      exercises: [
+        { id: "bench", name: "Bench Press", meta: "3×5–8", muscles: ["chest","arms"], type: "sets3" },
+        { id: "row", name: "Pendlay Row", meta: "3×5–8", muscles: ["back","arms"], type: "sets3" },
+        { id: "dips", name: "Weighted Dips", meta: "2–3×6–10", muscles: ["chest","arms"], type: "sets3" },
+        { id: "pullups", name: "Weighted Pull-Ups", meta: "3×5–8", muscles: ["lats","back","arms"], type: "sets3" },
+        { id: "latraise", name: "Lateral Raise", meta: "3×12–15", muscles: ["shoulders"], type: "weight" },
+        { id: "curl_inc", name: "Incline DB Curl", meta: "2–3×10–12", muscles: ["arms"], type: "weight" }
+      ]
+    },
+    {
+      id: 2,
+      title: "Day 2 — Run + Arms / Delts",
+      badge: "Run + Upper",
+      exercises: [
+        { id: "run1", name: "Run (Speed/Tempo)", meta: "Intervals / tempo", muscles: ["run"], type: "run" },
+        { id: "ohp_mach", name: "Machine Shoulder Press", meta: "2–3×8–10", muscles: ["shoulders","arms"], type: "sets3" },
+        { id: "lat_cab", name: "Cable Lateral Raise", meta: "3×12–15", muscles: ["shoulders"], type: "weight" },
+        { id: "preacher", name: "Preacher Curl", meta: "3×8–12", muscles: ["arms"], type: "sets3" },
+        { id: "tricep_pd", name: "Tricep Pressdown", meta: "3×10–15", muscles: ["arms"], type: "weight" }
+      ]
+    },
+    {
+      id: 3,
+      title: "Day 3 — Lower 1 (Squat + Glutes)",
+      badge: "Lower",
+      exercises: [
+        { id: "squat", name: "Back Squat", meta: "3×5–8", muscles: ["legs","glutes"], type: "sets3" },
+        { id: "hip_thrust", name: "Hip Thrust / Glute Bridge", meta: "3×8–12", muscles: ["glutes","hams"], type: "sets3" },
+        { id: "leg_ext", name: "Leg Extension", meta: "2–3×10–15", muscles: ["legs"], type: "weight" },
+        { id: "leg_curl1", name: "Leg Curl", meta: "2–3×10–15", muscles: ["hams"], type: "weight" },
+        { id: "calf1", name: "Standing Calf Raise", meta: "3–4×10–15", muscles: ["calves"], type: "weight" }
+      ]
+    },
+    {
+      id: 4,
+      title: "Day 4 — Upper 2 (OHP + Pull)",
+      badge: "Upper",
+      exercises: [
+        { id: "ohp", name: "Overhead Press", meta: "3×5–8", muscles: ["shoulders","arms"], type: "sets3" },
+        { id: "cs_row", name: "Chest-Supported Row", meta: "3×8–10", muscles: ["back","arms"], type: "sets3" },
+        { id: "lat_pd", name: "Lat Pulldown / Pull-Ups", meta: "3–4×8–12", muscles: ["lats","back","arms"], type: "sets4" },
+        { id: "inc_bench", name: "Incline Bench Press", meta: "3×8–10", muscles: ["chest","arms"], type: "sets3" },
+        { id: "face_pull", name: "Face Pull", meta: "2–3×12–15", muscles: ["shoulders","back"], type: "weight" },
+        { id: "hammer", name: "Hammer Curl", meta: "2–3×10–12", muscles: ["arms"], type: "weight" }
+      ]
+    },
+    {
+      id: 5,
+      title: "Day 5 — Run + Arms / Delts 2",
+      badge: "Run + Upper",
+      exercises: [
+        { id: "run2", name: "Run (Z2 / Threshold)", meta: "30–45 min", muscles: ["run"], type: "run" },
+        { id: "rd_fly", name: "Rear Delt Fly", meta: "3×12–15", muscles: ["shoulders"], type: "weight" },
+        { id: "cab_curl", name: "Cable Curl", meta: "3×10–15", muscles: ["arms"], type: "weight" },
+        { id: "skulls", name: "Skullcrusher / Rope Ext.", meta: "3×10–12", muscles: ["arms"], type: "weight" }
+      ]
+    },
+    {
+      id: 6,
+      title: "Day 6 — Lower 2 (RDL + Posterior)",
+      badge: "Lower",
+      exercises: [
+        { id: "rdl", name: "Romanian Deadlift", meta: "3×6–8", muscles: ["hams","glutes"], type: "sets3" },
+        { id: "hip_light", name: "Hip Thrust (Light)", meta: "2–3×10–12", muscles: ["glutes","hams"], type: "sets3" },
+        { id: "leg_press", name: "Leg Press (Quad Bias)", meta: "3×8–12", muscles: ["legs"], type: "sets3" },
+        { id: "leg_curl2", name: "Leg Curl", meta: "2–3×10–15", muscles: ["hams"], type: "weight" },
+        { id: "calf2", name: "Seated Calf Raise", meta: "3–4×10–15", muscles: ["calves"], type: "weight" }
+      ]
+    },
+    {
+      id: 7,
+      title: "Day 7 — Freestyle / Superset Builder",
+      badge: "Freestyle",
+      freestyle: true,
+      exercises: [
+        { id: "fs1", name: "Superset 1", meta: "Build A/B/C", muscles: ["freestyle"], type: "freestyle" },
+        { id: "fs2", name: "Superset 2", meta: "Optional", muscles: ["freestyle"], type: "freestyle" },
+        { id: "fs3", name: "Superset 3", meta: "Optional", muscles: ["freestyle"], type: "freestyle" }
+      ]
+    }
+  ];
+
+  let state = {};
+  let currentWeek = 1;
+  let exerciseLibrary = {};
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function buildKey(week, day, ex, field) {
+    return `w${week}_d${day}_e${ex}_${field}`;
+  }
+  function isHeavy(name) {
+    if (!name) return false;
+    const n = name.toLowerCase();
+    return ["squat","deadlift","bench","press","row","pull-up","pull up","pullups","pull ups","dip","dips"].some(w => n.includes(w));
+  }
+  function applyProgressive(el, week, day, ex, field, name) {
+    if (week <= 1) return;
+    if (!(field.startsWith("s") || field === "wt")) return;
+    const key = buildKey(week, day, ex, field);
+    if (state[key] !== undefined && state[key] !== "") return;
+    const prevKey = buildKey(week - 1, day, ex, field);
+    const prev = parseFloat(state[prevKey]);
+    if (isNaN(prev)) return;
+    const inc = isHeavy(name) ? 5 : 2.5;
+    const val = prev + inc;
+    el.value = val;
+    state[key] = val;
+  }
+
+  function buildExerciseLibrary() {
+    exerciseLibrary = {};
+    MUSCLE_ORDER.forEach(m => exerciseLibrary[m] = new Set());
+    PROGRAM.forEach(day => {
+      day.exercises.forEach(ex => {
+        if (ex.type === "freestyle") return;
+        ex.muscles.forEach(m => {
+          if (!exerciseLibrary[m]) exerciseLibrary[m] = new Set();
+          exerciseLibrary[m].add(ex.name);
+        });
+      });
+    });
+  }
+
+  function buildUI() {
+    const container = document.getElementById("workoutContainer");
+    container.innerHTML = "";
+    PROGRAM.forEach(day => {
+      const det = document.createElement("details");
+      det.dataset.day = day.id;
+      const sum = document.createElement("summary");
+      const left = document.createElement("span");
+      left.textContent = day.title;
+      const right = document.createElement("span");
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = day.badge;
+      const done = document.createElement("span");
+      done.className = "day-complete";
+      done.textContent = "✓ Done";
+      right.appendChild(badge);
+      right.appendChild(done);
+      sum.appendChild(left);
+      sum.appendChild(right);
+      det.appendChild(sum);
+
+      day.exercises.forEach(ex => {
+        const exDiv = document.createElement("div");
+        exDiv.className = "exercise";
+        exDiv.dataset.ex = ex.id;
+        exDiv.dataset.muscle = ex.muscles.join(",");
+
+        const head = document.createElement("div");
+        head.className = "exercise-header";
+        const hm = document.createElement("div");
+        hm.className = "exercise-header-main";
+        const nm = document.createElement("span");
+        nm.className = "exercise-name";
+        nm.textContent = ex.name;
+        const mt = document.createElement("span");
+        mt.className = "exercise-meta";
+        mt.textContent = ex.meta;
+        const mus = document.createElement("span");
+        mus.className = "muscle-tags";
+        mus.textContent = ex.muscles.map(m => MUSCLE_LABELS[m] || m).join(" · ");
+        hm.appendChild(nm);
+        hm.appendChild(mt);
+        hm.appendChild(mus);
+
+        const useLabel = document.createElement("label");
+        useLabel.className = "use-toggle";
+        const useCb = document.createElement("input");
+        useCb.type = "checkbox";
+        useCb.dataset.field = "use";
+        useCb.checked = true;
+        useLabel.appendChild(useCb);
+        useLabel.appendChild(document.createTextNode("Use"));
+        head.appendChild(hm);
+        head.appendChild(useLabel);
+        exDiv.appendChild(head);
+
+        if (["sets3","sets4","weight","run"].includes(ex.type)) {
+          const row = document.createElement("div");
+          row.className = "inputs-row";
+          if (ex.type === "sets3" || ex.type === "sets4") {
+            const maxSets = ex.type === "sets4" ? 4 : 3;
+            for (let i = 1; i <= maxSets; i++) {
+              const lab = document.createElement("label");
+              lab.textContent = "Set " + i;
+              const inp = document.createElement("input");
+              inp.type = "number";
+              inp.dataset.field = "s" + i;
+              lab.appendChild(inp);
+              row.appendChild(lab);
+            }
+          } else if (ex.type === "weight") {
+            const lab = document.createElement("label");
+            lab.textContent = "Weight";
+            const inp = document.createElement("input");
+            inp.type = "number";
+            inp.dataset.field = "wt";
+            lab.appendChild(inp);
+            row.appendChild(lab);
+          } else if (ex.type === "run") {
+            const lab1 = document.createElement("label");
+            lab1.textContent = "Distance (mi)";
+            const d = document.createElement("input");
+            d.type = "number";
+            d.step = "0.01";
+            d.dataset.field = "dist";
+            lab1.appendChild(d);
+            row.appendChild(lab1);
+            const lab2 = document.createElement("label");
+            lab2.textContent = "Time (min)";
+            const t = document.createElement("input");
+            t.type = "number";
+            t.step = "0.1";
+            t.dataset.field = "time";
+            lab2.appendChild(t);
+            row.appendChild(lab2);
+          }
+          exDiv.appendChild(row);
+        } else if (ex.type === "freestyle") {
+          const block = document.createElement("div");
+          block.className = "superset-block";
+          ["A","B","C"].forEach(letter => {
+            const title = document.createElement("div");
+            title.className = "superset-title";
+            title.textContent = "Exercise " + letter + (letter === "C" ? " (optional)" : "");
+            const row = document.createElement("div");
+            row.className = "superset-row";
+            const selMus = document.createElement("select");
+            selMus.className = "superset-muscle";
+            selMus.dataset.field = "muscle" + letter;
+            const selEx = document.createElement("select");
+            selEx.className = "superset-exercise";
+            selEx.dataset.field = "ex" + letter;
+
+            row.appendChild(selMus);
+            row.appendChild(selEx);
+            for (let i = 1; i <= 3; i++) {
+              const inp = document.createElement("input");
+              inp.type = "number";
+              inp.placeholder = "S" + i;
+              inp.dataset.field = letter.toLowerCase() + "_s" + i;
+              row.appendChild(inp);
+            }
+            block.appendChild(title);
+            block.appendChild(row);
+          });
+          exDiv.appendChild(block);
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "exercise-actions";
+        const doneWrap = document.createElement("span");
+        doneWrap.className = "exercise-done";
+        const doneCb = document.createElement("input");
+        doneCb.type = "checkbox";
+        doneCb.dataset.field = "done";
+        doneWrap.appendChild(doneCb);
+        doneWrap.appendChild(document.createTextNode("Done"));
+        const notes = document.createElement("input");
+        notes.type = "text";
+        notes.placeholder = "Notes / RPE";
+        notes.dataset.field = "notes";
+        actions.appendChild(doneWrap);
+        actions.appendChild(notes);
+        exDiv.appendChild(actions);
+
+        det.appendChild(exDiv);
+      });
+
+      container.appendChild(det);
+    });
+  }
+
+  function updateExerciseVisibility(exEl) {
+    const use = exEl.querySelector('input[data-field="use"]');
+    const used = use ? use.checked : true;
+    if (used) exEl.classList.remove("exercise-disabled");
+    else exEl.classList.add("exercise-disabled");
+  }
+
+  function updateDayComplete(dayEl) {
+    const day = dayEl.dataset.day;
+    let allDone = true;
+    dayEl.querySelectorAll(".exercise").forEach(exEl => {
+      const ex = exEl.dataset.ex;
+      const useKey = buildKey(currentWeek, day, ex, "use");
+      const used = state[useKey] === undefined ? true : !!state[useKey];
+      if (!used) return;
+      const key = buildKey(currentWeek, day, ex, "done");
+      if (!state[key]) allDone = false;
+    });
+    const badge = dayEl.querySelector(".day-complete");
+    if (badge) badge.style.display = allDone ? "inline-flex" : "none";
+  }
+
+  function hydrateAll() {
+    document.querySelectorAll(".exercise").forEach(exEl => {
+      const day = exEl.closest("details").dataset.day;
+      const ex = exEl.dataset.ex;
+      const name = exEl.querySelector(".exercise-name").textContent.trim();
+      exEl.querySelectorAll("input,select").forEach(el => {
+        const field = el.dataset.field;
+        if (!field) return;
+        const key = buildKey(currentWeek, day, ex, field);
+        if (el.tagName === "INPUT") {
+          if (el.type === "checkbox") {
+            if (field === "use") {
+              el.checked = state[key] === undefined ? true : !!state[key];
+            } else {
+              el.checked = !!state[key];
+            }
+          } else {
+            if (state[key] !== undefined) {
+              el.value = state[key];
+            } else {
+              el.value = "";
+              if (el.type === "number") applyProgressive(el, currentWeek, day, ex, field, name);
+            }
+          }
+        } else if (el.tagName === "SELECT") {
+          if (state[key] !== undefined) el.value = state[key];
+        }
+      });
+      updateExerciseVisibility(exEl);
+    });
+    document.querySelectorAll("details[data-day]").forEach(updateDayComplete);
+    saveState();
+    buildExerciseFilterOptions();
+    renderProgressTable();
+    applyMuscleFilter();
+    initFreestyleDropdownsHydrate();
+  }
+
+  function attachHandlers() {
+    state = loadState();
+    currentWeek = state.current_week || 1;
+    if (currentWeek < 1 || currentWeek > MAX_WEEKS) currentWeek = 1;
+    document.getElementById("weekSelect").value = String(currentWeek);
+    document.getElementById("weekSelect").addEventListener("change", e => {
+      currentWeek = parseInt(e.target.value) || 1;
+      state.current_week = currentWeek;
+      saveState();
+      hydrateAll();
+    });
+
+    document.querySelectorAll(".exercise").forEach(exEl => {
+      const day = exEl.closest("details").dataset.day;
+      const ex = exEl.dataset.ex;
+      exEl.querySelectorAll("input,select").forEach(el => {
+        const field = el.dataset.field;
+        if (!field) return;
+        el.addEventListener("input", () => {
+          const key = buildKey(currentWeek, day, ex, field);
+          if (el.tagName === "INPUT" && el.type === "checkbox") {
+            state[key] = el.checked;
+          } else {
+            state[key] = el.value;
+          }
+          saveState();
+          if (field === "done") updateDayComplete(exEl.closest("details"));
+          if (field === "use") {
+            updateExerciseVisibility(exEl);
+            updateDayComplete(exEl.closest("details"));
+          }
+          if (exEl.classList.contains("freestyle")) renderProgressTable();
+        });
+      });
+    });
+
+    document.getElementById("exerciseFilter").addEventListener("change", renderProgressTable);
+    document.querySelectorAll('#muscleFilters input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener("change", applyMuscleFilter);
+    });
+  }
+
+  function resetCurrentDay() {
+    const open = document.querySelector("details[open][data-day]");
+    if (!open) return;
+    const day = open.dataset.day;
+    open.querySelectorAll(".exercise").forEach(exEl => {
+      const ex = exEl.dataset.ex;
+      exEl.querySelectorAll("input,select").forEach(el => {
+        const field = el.dataset.field;
+        if (!field) return;
+        const key = buildKey(currentWeek, day, ex, field);
+        if (el.tagName === "INPUT") {
+          if (el.type === "checkbox") {
+            if (field === "use") {
+              el.checked = true;
+              state[key] = true;
+            } else {
+              el.checked = false;
+              state[key] = false;
+            }
+          } else {
+            el.value = "";
+            delete state[key];
+          }
+        } else {
+          el.value = "";
+          delete state[key];
+        }
+      });
+      updateExerciseVisibility(exEl);
+    });
+    saveState();
+    updateDayComplete(open);
+    applyMuscleFilter();
+    renderProgressTable();
+  }
+
+  function resetWeek() {
+    if (!confirm("Reset all data for this week?")) return;
+    document.querySelectorAll(".exercise").forEach(exEl => {
+      const day = exEl.closest("details").dataset.day;
+      const ex = exEl.dataset.ex;
+      exEl.querySelectorAll("input,select").forEach(el => {
+        const field = el.dataset.field;
+        if (!field) return;
+        const key = buildKey(currentWeek, day, ex, field);
+        if (el.tagName === "INPUT") {
+          if (el.type === "checkbox") {
+            if (field === "use") el.checked = true;
+            else el.checked = false;
+          } else el.value = "";
+        } else el.value = "";
+        delete state[key];
+      });
+      updateExerciseVisibility(exEl);
+    });
+    saveState();
+    document.querySelectorAll("details[data-day]").forEach(updateDayComplete);
+    applyMuscleFilter();
+    renderProgressTable();
+  }
+
+  function resetAll() {
+    if (!confirm("Reset ALL weeks and data?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = {};
+    currentWeek = 1;
+    document.getElementById("weekSelect").value = "1";
+    document.querySelectorAll("input,select").forEach(el => {
+      const field = el.dataset.field;
+      if (el.tagName === "INPUT") {
+        if (el.type === "checkbox") {
+          if (field === "use") el.checked = true;
+          else el.checked = false;
+        } else el.value = "";
+      } else el.value = "";
+    });
+    document.querySelectorAll(".exercise").forEach(exEl => exEl.classList.remove("exercise-disabled"));
+    document.querySelectorAll(".day-complete").forEach(b => b.style.display = "none");
+    clearMuscleFilters();
+    renderProgressTable();
+  }
+
+  function showView(v) {
+    const w = document.getElementById("workoutView");
+    const d = document.getElementById("dataView");
+    const mf = document.getElementById("muscleFilters");
+    const tw = document.getElementById("tabWorkout");
+    const td = document.getElementById("tabData");
+    if (v === "workout") {
+      w.style.display = "block";
+      d.style.display = "none";
+      mf.style.display = "flex";
+      tw.classList.add("active");
+      td.classList.remove("active");
+    } else {
+      w.style.display = "none";
+      d.style.display = "block";
+      mf.style.display = "none";
+      tw.classList.remove("active");
+      td.classList.add("active");
+      renderProgressTable();
+    }
+  }
+
+  function collectMeta() {
+    const arr = [];
+    PROGRAM.forEach(day => {
+      day.exercises.forEach(ex => {
+        arr.push({
+          day: day.id,
+          ex: ex.id,
+          name: ex.name,
+          dayTitle: day.title,
+          key: `d${day.id}_e${ex.id}`
+        });
+      });
+    });
+    return arr;
+  }
+
+  function buildExerciseFilterOptions() {
+    const sel = document.getElementById("exerciseFilter");
+    if (!sel) return;
+    const prev = sel.value || "all";
+    sel.innerHTML = "<option value='all'>All</option>";
+    const meta = collectMeta();
+    const used = new Set();
+    meta.forEach(m => {
+      if (used.has(m.key)) return;
+      used.add(m.key);
+      const opt = document.createElement("option");
+      opt.value = m.key;
+      opt.textContent = m.dayTitle + " – " + m.name;
+      sel.appendChild(opt);
+    });
+    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  }
+
+  function maxWeightFor(meta, week) {
+    const fields = ["s1","s2","s3","s4","wt","a_s1","a_s2","a_s3","b_s1","b_s2","b_s3","c_s1","c_s2","c_s3"];
+    let max = null;
+    fields.forEach(f => {
+      const k = buildKey(week, meta.day, meta.ex, f);
+      const v = parseFloat(state[k]);
+      if (!isNaN(v)) max = max === null ? v : Math.max(max, v);
+    });
+    return max;
+  }
+
+  function renderProgressTable() {
+    const container = document.getElementById("progressTableContainer");
+    if (!container) return;
+    const metaAll = collectMeta();
+    const filter = document.getElementById("exerciseFilter").value;
+    let html = "<div style='max-height:60vh;overflow:auto;border:1px solid #111827;border-radius:10px;'><table><thead><tr><th>Exercise</th>";
+    for (let w = 1; w <= MAX_WEEKS; w++) html += `<th>W${w}</th>`;
+    html += "</tr></thead><tbody>";
+    const used = new Set();
+    metaAll.forEach(m => {
+      const keyId = m.key;
+      if (filter !== "all" && filter !== keyId) return;
+      if (used.has(keyId)) return;
+      used.add(keyId);
+      html += `<tr><td>${m.dayTitle} – ${m.name}</td>`;
+      for (let w = 1; w <= MAX_WEEKS; w++) {
+        const v = maxWeightFor(m, w);
+        html += `<td>${v !== null ? v.toFixed(1) : "–"}</td>`;
+      }
+      html += "</tr>";
+    });
+    html += "</tbody></table></div>";
+    container.innerHTML = html;
+  }
+
+  function getSelectedMuscles() {
+    const arr = [];
+    document.querySelectorAll('#muscleFilters input[type="checkbox"]').forEach(cb => {
+      if (cb.checked) arr.push(cb.value);
+    });
+    return arr;
+  }
+
+  function applyMuscleFilter() {
+    const selected = getSelectedMuscles();
+    const has = selected.length > 0;
+    document.querySelectorAll(".exercise").forEach(exEl => {
+      if (!has) {
+        exEl.style.display = "";
+        return;
+      }
+      const mus = (exEl.dataset.muscle || "")
+        .split(",")
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean);
+      const match = mus.some(m => selected.includes(m));
+      exEl.style.display = match ? "" : "none";
+    });
+  }
+
+  function clearMuscleFilters() {
+    document.querySelectorAll('#muscleFilters input[type="checkbox"]').forEach(cb => cb.checked = false);
+    applyMuscleFilter();
+  }
+
+  function applyMusclePreset(name) {
+    const presets = {
+      upper: ["chest","back","lats","shoulders","arms"],
+      lower: ["legs","glutes","hams","calves"],
+      push: ["chest","shoulders","arms"],
+      pull: ["back","lats","arms"]
+    };
+    const vals = presets[name] || [];
+    document.querySelectorAll('#muscleFilters input[type="checkbox"]').forEach(cb => {
+      cb.checked = vals.includes(cb.value);
+    });
+    applyMuscleFilter();
+  }
+
+  function initFreestyleDropdownsHydrate() {
+    document.querySelectorAll(".superset-row").forEach(row => {
+      const mus = row.querySelector(".superset-muscle");
+      const exSel = row.querySelector(".superset-exercise");
+      if (!mus || !exSel) return;
+
+      // populate muscle dropdown if empty
+      if (!mus.options.length) {
+        let opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Muscle group";
+        mus.appendChild(opt);
+        MUSCLE_ORDER.forEach(m => {
+          if (!MUSCLE_LABELS[m]) return;
+          const o = document.createElement("option");
+          o.value = m;
+          o.textContent = MUSCLE_LABELS[m];
+          mus.appendChild(o);
+        });
+      }
+      // populate exercise dropdown based on muscle value
+      function populateExerciseOptions(muscleValue) {
+        exSel.innerHTML = "";
+        const base = document.createElement("option");
+        base.value = "";
+        base.textContent = muscleValue ? "Exercise" : "Select muscle first";
+        exSel.appendChild(base);
+        if (muscleValue && exerciseLibrary[muscleValue]) {
+          Array.from(exerciseLibrary[muscleValue]).sort().forEach(name => {
+            const o = document.createElement("option");
+            o.value = name;
+            o.textContent = name;
+            exSel.appendChild(o);
+          });
+        }
+      }
+
+      const day = mus.closest("details").dataset.day;
+      const exId = mus.closest(".exercise").dataset.ex;
+
+      // hydrate existing state
+      const musField = mus.dataset.field;
+      const musKey = buildKey(currentWeek, day, exId, musField);
+      if (state[musKey] !== undefined) mus.value = state[musKey];
+
+      populateExerciseOptions(mus.value);
+
+      const exField = exSel.dataset.field;
+      const exKey = buildKey(currentWeek, day, exId, exField);
+      if (state[exKey] !== undefined) exSel.value = state[exKey];
+
+      mus.addEventListener("change", () => {
+        const key = buildKey(currentWeek, day, exId, musField);
+        state[key] = mus.value;
+        // reset selected exercise
+        const exKey2 = buildKey(currentWeek, day, exId, exField);
+        delete state[exKey2];
+        populateExerciseOptions(mus.value);
+        exSel.value = "";
+        saveState();
+      });
+
+      exSel.addEventListener("change", () => {
+        const key = buildKey(currentWeek, day, exId, exField);
+        state[key] = exSel.value;
+        saveState();
+      });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    state = loadState();
+    buildExerciseLibrary();
+    buildUI();
+    // Re-query after dynamic build
+    attachHandlers();
+    hydrateAll();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("service-worker.js").catch(function (err) {
+          console.log("Service worker registration failed:", err);
+        });
+      });
+    }
+  });
+
+  window.resetCurrentDay = resetCurrentDay;
+  window.resetWeek = resetWeek;
+  window.resetAll = resetAll;
+  window.showView = showView;
+  window.clearMuscleFilters = clearMuscleFilters;
+  window.applyMusclePreset = applyMusclePreset;
+</script>
+</body>
+</html>
