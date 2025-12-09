@@ -353,6 +353,7 @@
     .view-toggle-buttons {
       display: flex;
       gap: 4px;
+      flex-wrap: wrap;
     }
     .view-toggle-btn {
       border-radius: 999px;
@@ -369,6 +370,77 @@
       color: #022c22;
       font-weight: 600;
     }
+
+    /* weekly-by-muscle view styling */
+    .muscle-group {
+      border-radius: 14px;
+      margin-bottom: 9px;
+      background: #020617;
+      border: 1px solid #111827;
+      padding: 8px 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+    }
+    .muscle-group-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .muscle-group-sub {
+      font-size: 10px;
+      color: #6b7280;
+    }
+    .muscle-group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .muscle-ex-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      padding-top: 4px;
+      border-top: 1px solid #111827;
+      font-size: 11px;
+    }
+    .muscle-ex-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .muscle-ex-title {
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .muscle-ex-meta {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+    .muscle-ex-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 10px;
+      color: #9ca3af;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 120px;
+    }
+    .muscle-ex-actions label {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+    }
+    .muscle-ex-actions input {
+      width: 14px;
+      height: 14px;
+    }
+
     @media (min-width: 768px) {
       h1 { font-size: 18px; }
       summary { font-size: 14px; }
@@ -415,6 +487,7 @@
     <div class="view-toggle-buttons">
       <button type="button" class="view-toggle-btn active" id="viewModeDay">Day</button>
       <button type="button" class="view-toggle-btn" id="viewModeWeek">Week (all days)</button>
+      <button type="button" class="view-toggle-btn" id="viewModeMuscle">Week by muscle</button>
     </div>
   </div>
   <div class="muscle-filters" id="muscleFilters">
@@ -446,6 +519,7 @@
       Make sure you open this file directly in Safari/Chrome (not just a preview).
     </p>
   </div>
+  <div class="container" id="muscleWeekContainer" style="display:none;"></div>
 </div>
 
 <div id="dataView">
@@ -481,6 +555,8 @@
     calves: "Calves", run: "Run", freestyle: "Freestyle"
   };
   const MUSCLE_ORDER = ["chest","back","lats","shoulders","arms","legs","glutes","hams","calves","run","freestyle"];
+  // Priority for assigning each exercise to a single muscle (arms last)
+  const MUSCLE_PRIORITY = ["chest","back","lats","shoulders","legs","glutes","hams","calves","run","freestyle","arms"];
 
   let state = {};
   let currentWeek = 1;
@@ -916,6 +992,9 @@
     renderProgressTable();
     applyMuscleFilter();
     initFreestyleDropdownsHydrate();
+    if (currentViewMode === "muscle") {
+      buildMuscleWeekView();
+    }
   }
 
   function attachHandlers() {
@@ -929,6 +1008,7 @@
       state.current_week = currentWeek;
       saveState();
       hydrateAll();
+      if (currentViewMode === "muscle") buildMuscleWeekView();
     });
 
     const profileSelect = document.getElementById("profileSelect");
@@ -941,8 +1021,10 @@
 
     const dayBtn = document.getElementById("viewModeDay");
     const weekBtn = document.getElementById("viewModeWeek");
+    const muscleBtn = document.getElementById("viewModeMuscle");
     if (dayBtn) dayBtn.addEventListener("click", () => setViewMode("day"));
     if (weekBtn) weekBtn.addEventListener("click", () => setViewMode("week"));
+    if (muscleBtn) muscleBtn.addEventListener("click", () => setViewMode("muscle"));
 
     document.querySelectorAll(".exercise").forEach(exEl => {
       const day = exEl.closest("details").dataset.day;
@@ -962,6 +1044,9 @@
           if (field === "use") {
             updateExerciseVisibility(exEl);
             updateDayComplete(exEl.closest("details"));
+          }
+          if (currentViewMode === "muscle") {
+            buildMuscleWeekView();
           }
         });
       });
@@ -1007,6 +1092,7 @@
     updateDayComplete(open);
     applyMuscleFilter();
     renderProgressTable();
+    if (currentViewMode === "muscle") buildMuscleWeekView();
   }
 
   function resetWeek() {
@@ -1032,6 +1118,7 @@
     document.querySelectorAll("details[data-day]").forEach(updateDayComplete);
     applyMuscleFilter();
     renderProgressTable();
+    if (currentViewMode === "muscle") buildMuscleWeekView();
   }
 
   function resetAll() {
@@ -1053,6 +1140,7 @@
     document.querySelectorAll(".day-complete").forEach(b => b.style.display = "none");
     clearMuscleFilters();
     renderProgressTable();
+    if (currentViewMode === "muscle") buildMuscleWeekView();
   }
 
   function showView(v) {
@@ -1064,7 +1152,7 @@
     if (v === "workout") {
       w.style.display = "block";
       d.style.display = "none";
-      mf.style.display = "flex";
+      mf.style.display = (currentViewMode === "muscle") ? "none" : "flex";
       tw.classList.add("active");
       td.classList.remove("active");
     } else {
@@ -1257,22 +1345,167 @@
     });
   }
 
+  // Choose a single muscle for week-by-muscle view (arms last)
+  function choosePrimaryMuscle(muscles) {
+    if (!muscles || !muscles.length) return "freestyle";
+    const lower = muscles.map(m => m.toLowerCase());
+    for (const m of MUSCLE_PRIORITY) {
+      if (lower.includes(m)) return m;
+    }
+    return lower[0];
+  }
+
+  function buildMuscleWeekView() {
+    const container = document.getElementById("muscleWeekContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const note = document.createElement("p");
+    note.style.fontSize = "11px";
+    note.style.color = "#9ca3af";
+    note.style.margin = "0 0 8px 0";
+    note.textContent = "Weekly view grouped by muscle. Each exercise appears in exactly one group (arms is used only as a fallback).";
+    container.appendChild(note);
+
+    const groups = {};
+    MUSCLE_ORDER.forEach(m => { groups[m] = []; });
+
+    PROGRAM.forEach(day => {
+      day.exercises.forEach(ex => {
+        const primary = choosePrimaryMuscle(ex.muscles || []);
+        if (!groups[primary]) groups[primary] = [];
+        groups[primary].push({ day, ex });
+      });
+    });
+
+    MUSCLE_ORDER.forEach(muscle => {
+      const items = groups[muscle] || [];
+      if (!items.length) return;
+
+      const label = MUSCLE_LABELS[muscle] || muscle;
+      const group = document.createElement("div");
+      group.className = "muscle-group";
+
+      const titleRow = document.createElement("div");
+      titleRow.className = "muscle-group-title";
+      const title = document.createElement("span");
+      title.textContent = label;
+      const sub = document.createElement("span");
+      sub.className = "muscle-group-sub";
+      sub.textContent = `${items.length} exercise${items.length > 1 ? "s" : ""}`;
+      titleRow.appendChild(title);
+      titleRow.appendChild(sub);
+      group.appendChild(titleRow);
+
+      const list = document.createElement("div");
+      list.className = "muscle-group-list";
+
+      items.forEach(({ day, ex }) => {
+        const row = document.createElement("div");
+        row.className = "muscle-ex-row";
+
+        const main = document.createElement("div");
+        main.className = "muscle-ex-main";
+        const t = document.createElement("div");
+        t.className = "muscle-ex-title";
+        t.textContent = ex.name;
+        const meta = document.createElement("div");
+        meta.className = "muscle-ex-meta";
+        meta.textContent = `${day.title} · ${ex.meta}`;
+        main.appendChild(t);
+        main.appendChild(meta);
+
+        const actions = document.createElement("div");
+        actions.className = "muscle-ex-actions";
+
+        const useKey = buildKey(currentWeek, day.id, ex.id, "use");
+        const doneKey = buildKey(currentWeek, day.id, ex.id, "done");
+        const usedStored = state[useKey];
+        const used = usedStored === undefined ? true : !!usedStored;
+        const done = !!state[doneKey];
+
+        const useLabel = document.createElement("label");
+        const useCb = document.createElement("input");
+        useCb.type = "checkbox";
+        useCb.checked = used;
+        useLabel.appendChild(useCb);
+        useLabel.appendChild(document.createTextNode("Use"));
+
+        const doneLabel = document.createElement("label");
+        const doneCb = document.createElement("input");
+        doneCb.type = "checkbox";
+        doneCb.checked = done;
+        doneLabel.appendChild(doneCb);
+        doneLabel.appendChild(document.createTextNode("Done"));
+
+        actions.appendChild(useLabel);
+        actions.appendChild(doneLabel);
+
+        useCb.addEventListener("change", () => {
+          state[useKey] = useCb.checked;
+          saveState();
+          const exEl = document.querySelector(`details[data-day="${day.id}"] .exercise[data-ex="${ex.id}"]`);
+          if (exEl) {
+            const checkbox = exEl.querySelector('input[data-field="use"]');
+            if (checkbox) checkbox.checked = useCb.checked;
+            updateExerciseVisibility(exEl);
+            updateDayComplete(exEl.closest("details"));
+          }
+        });
+
+        doneCb.addEventListener("change", () => {
+          state[doneKey] = doneCb.checked;
+          saveState();
+          const exEl = document.querySelector(`details[data-day="${day.id}"] .exercise[data-ex="${ex.id}"]`);
+          if (exEl) {
+            const checkbox = exEl.querySelector('input[data-field="done"]');
+            if (checkbox) checkbox.checked = doneCb.checked;
+            updateDayComplete(exEl.closest("details"));
+          }
+        });
+
+        row.appendChild(main);
+        row.appendChild(actions);
+        list.appendChild(row);
+      });
+
+      group.appendChild(list);
+      container.appendChild(group);
+    });
+  }
+
   function setViewMode(mode) {
     currentViewMode = mode;
     try { localStorage.setItem("hybrid_ul_tracker_view_mode", mode); } catch (e) {}
+
     const dayBtn = document.getElementById("viewModeDay");
     const weekBtn = document.getElementById("viewModeWeek");
-    if (dayBtn && weekBtn) {
-      if (mode === "week") {
-        dayBtn.classList.remove("active");
-        weekBtn.classList.add("active");
-      } else {
-        dayBtn.classList.add("active");
-        weekBtn.classList.remove("active");
-      }
+    const muscleBtn = document.getElementById("viewModeMuscle");
+    const workoutContainer = document.getElementById("workoutContainer");
+    const muscleWeekContainer = document.getElementById("muscleWeekContainer");
+    const mf = document.getElementById("muscleFilters");
+
+    if (dayBtn && weekBtn && muscleBtn) {
+      dayBtn.classList.remove("active");
+      weekBtn.classList.remove("active");
+      muscleBtn.classList.remove("active");
+      if (mode === "day") dayBtn.classList.add("active");
+      else if (mode === "week") weekBtn.classList.add("active");
+      else if (mode === "muscle") muscleBtn.classList.add("active");
     }
-    if (mode === "week") {
-      document.querySelectorAll("details[data-day]").forEach(d => { d.open = true; });
+
+    if (mode === "muscle") {
+      if (workoutContainer) workoutContainer.style.display = "none";
+      if (muscleWeekContainer) muscleWeekContainer.style.display = "block";
+      if (mf) mf.style.display = "none";
+      buildMuscleWeekView();
+    } else {
+      if (workoutContainer) workoutContainer.style.display = "block";
+      if (muscleWeekContainer) muscleWeekContainer.style.display = "none";
+      if (mf) mf.style.display = "flex";
+      if (mode === "week") {
+        document.querySelectorAll("details[data-day]").forEach(d => { d.open = true; });
+      }
     }
   }
 
@@ -1296,7 +1529,7 @@
         currentProfile = savedProfile;
       }
       const savedView = localStorage.getItem("hybrid_ul_tracker_view_mode");
-      if (savedView === "week" || savedView === "day") {
+      if (savedView === "week" || savedView === "day" || savedView === "muscle") {
         currentViewMode = savedView;
       }
     } catch (e) {}
