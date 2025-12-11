@@ -651,17 +651,20 @@
     }
   ];
 
+  // UPDATED SARAH PROGRAM PER YOUR SPEC
   const PROGRAM_SARAH = [
     {
       id: 1,
       title: "Day 1 — Push",
       badge: "Push",
       exercises: [
-        { id: "s_bench",    name: "Bench Press",           meta: "3×8–10",      muscles: ["chest","arms"],     type: "sets3" },
-        { id: "s_ohp",      name: "Overhead Press",       meta: "3×6–8",       muscles: ["shoulders","arms"], type: "sets3" },
-        { id: "s_inc_db",   name: "Incline DB Press",     meta: "3×8–12",      muscles: ["chest","arms"],     type: "sets3" },
-        { id: "s_lat_raise",name: "Lateral Raise",        meta: "3×12–15",     muscles: ["shoulders"],        type: "weight" },
-        { id: "s_tricep_pd",name: "Tricep Pressdown",     meta: "3×10–15",     muscles: ["arms"],             type: "weight" }
+        { id: "s_bench",      name: "Bench Press",                   meta: "3×8–10",      muscles: ["chest","arms"],     type: "sets3" },
+        { id: "s_inc_bench",  name: "Incline Bench Press",           meta: "3×8–12",      muscles: ["chest","arms"],     type: "sets3" },
+        { id: "s_chest_fly",  name: "Chest Flys",                    meta: "3×10–15",     muscles: ["chest"],            type: "weight" },
+        { id: "s_ohp",        name: "Overhead Press",                meta: "3×6–8",       muscles: ["shoulders","arms"], type: "sets3" },
+        { id: "s_lat_raise",  name: "Lateral Raises",                meta: "3×12–15",     muscles: ["shoulders"],        type: "weight" },
+        { id: "s_tricep_pd",  name: "Tricep Pushdown",               meta: "3×10–15",     muscles: ["arms"],             type: "weight" },
+        { id: "s_dips",       name: "Dips",                          meta: "2–3×6–10",    muscles: ["chest","arms"],     type: "sets3" }
       ]
     },
     {
@@ -669,11 +672,12 @@
       title: "Day 2 — Pull",
       badge: "Pull",
       exercises: [
-        { id: "s_lat_pd",   name: "Lat Pulldown",         meta: "3×8–12",      muscles: ["lats","back","arms"], type: "sets3" },
-        { id: "s_row",      name: "Chest-Supported Row",  meta: "3×8–10",      muscles: ["back","arms"],        type: "sets3" },
-        { id: "s_facepull", name: "Face Pull",            meta: "2–3×12–15",   muscles: ["shoulders","back"],   type: "weight" },
-        { id: "s_curl",     name: "Cable Curl",           meta: "3×10–15",     muscles: ["arms"],               type: "weight" },
-        { id: "s_hammer",   name: "Hammer Curl",          meta: "2–3×10–12",   muscles: ["arms"],               type: "weight" }
+        { id: "s_pullups",    name: "Pull-Ups",                       meta: "3×6–10",      muscles: ["lats","back","arms"], type: "sets3" },
+        { id: "s_row_sup",    name: "Bent Over Row (Superset)",      meta: "3×8–10",      muscles: ["back","arms"],        type: "sets3" },
+        { id: "s_curl_wide",  name: "Wide Bicep Curl (Superset)",    meta: "3×10–12",     muscles: ["arms"],               type: "weight" },
+        { id: "s_lat_pd",     name: "Lat Pulldown",                  meta: "3×8–12",      muscles: ["lats","back","arms"], type: "sets3" },
+        { id: "s_cs_row",     name: "Chest Supported Row",           meta: "3×8–10",      muscles: ["back","arms"],        type: "sets3" },
+        { id: "s_bicep_curl", name: "Bicep Curl",                    meta: "3×10–12",     muscles: ["arms"],               type: "weight" }
       ]
     },
     {
@@ -681,11 +685,13 @@
       title: "Day 3 — Legs",
       badge: "Legs",
       exercises: [
-        { id: "s_squat",    name: "Back Squat",           meta: "3×6–8",       muscles: ["legs","glutes"], type: "sets3" },
-        { id: "s_rdl",      name: "Romanian Deadlift",    meta: "3×6–8",       muscles: ["hams","glutes"], type: "sets3" },
-        { id: "s_lunge",    name: "Walking Lunge",        meta: "3×10–12/leg", muscles: ["legs","glutes"], type: "weight" },
-        { id: "s_legcurl",  name: "Leg Curl",             meta: "2–3×10–15",   muscles: ["hams"],          type: "weight" },
-        { id: "s_calf",     name: "Standing Calf Raise",  meta: "3–4×10–15",   muscles: ["calves"],        type: "weight" }
+        { id: "s_squat",        name: "Back Squat",                   meta: "3×6–8",       muscles: ["legs","glutes"], type: "sets3" },
+        { id: "s_leg_press",    name: "Leg Press",                    meta: "3×8–12",      muscles: ["legs","glutes"], type: "sets3" },
+        { id: "s_legcurl",      name: "Hamstring Curl",               meta: "2–3×10–15",   muscles: ["hams"],          type: "weight" },
+        { id: "s_rdl",          name: "Romanian Deadlift",            meta: "3×6–8",       muscles: ["hams","glutes"], type: "sets3" },
+        { id: "s_calf",         name: "Standing Calf Raise",          meta: "3–4×10–15",   muscles: ["calves"],        type: "weight" },
+        { id: "s_glute_bridge", name: "Glute Bridge",                 meta: "3×10–15",     muscles: ["glutes","hams"], type: "sets3" },
+        { id: "s_bad_girls",    name: "Hip Abduction (Bad Girls)",    meta: "3×12–20",     muscles: ["glutes"],        type: "weight" }
       ]
     },
     {
